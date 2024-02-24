@@ -1,5 +1,5 @@
 #include "Android_draw/draw.h"
-
+#include "main.h"
 #if defined(USE_OPENGL)
 #include "imgui_image.h"
 #else
@@ -82,9 +82,430 @@ int main(int argc, char *argv[]) {
 }
 
 
-
-
 void Layout_tick_UI() {
+    static bool show_demo_window = false;
+    static bool show_another_window = false;
+    static bool show_finddata_window = false;
+    static bool show_Dump_window = false;
+    static bool show_pointerTool_window = false;
+    static float f = 0.0f;
+    static int counter = 0;
+    static float color_number = 50.0f;
+    ImGui::Begin(u8"BigWhiteHack");
+    ImGui::SetWindowSize({1150, 700});
+
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    style.FrameRounding = 10.0f;
+
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
+
+    ImGui::SetCursorPos({ 10.0f, 30.0f });
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+    ImGui::BeginChild("ChildR", ImVec2(230, 680), true, window_flags);
+    if (ImGui::BeginTable("split", 1, ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings))
+    {
+        ImGui::TableNextColumn();
+
+        float Btn_Pos_Y = 10.0f;
+        ImGui::SetCursorPos({ 10.0f, Btn_Pos_Y });
+        ImGui::PushStyleColor(ImGuiCol_Button, Var::ColorNumber == 1 ? ImVec4(1.0f, 0.5f, 0.3f, 1.0f) : ImVec4(0.35f, 0.00f, 1.00f, 0.50f));
+        if (ImGui::Button("Home", ImVec2(200, 90))) {
+            Var::ColorNumber = 1;
+        }
+        ImGui::PopStyleColor();
+
+        Btn_Pos_Y += 110.0f;
+        ImGui::SetCursorPos({ 10.0f, Btn_Pos_Y });
+        ImGui::PushStyleColor(ImGuiCol_Button, Var::ColorNumber == 2 ? ImVec4(1.0f, 0.5f, 0.3f, 1.0f) : ImVec4(0.35f, 0.00f, 1.00f, 0.50f));
+        if (ImGui::Button("Button", ImVec2(200, 90))) {
+            Var::ColorNumber = 2;
+        }
+        ImGui::PopStyleColor();
+
+
+        Btn_Pos_Y += 110.0f;
+        ImGui::SetCursorPos({ 10.0f, Btn_Pos_Y });
+        ImGui::PushStyleColor(ImGuiCol_Button, Var::ColorNumber == 3 ? ImVec4(1.0f, 0.5f, 0.3f, 1.0f) : ImVec4(0.35f, 0.00f, 1.00f, 0.50f));
+        if (ImGui::Button("CheckBox", ImVec2(200, 90))) {
+            Var::ColorNumber = 3;
+        }
+        ImGui::PopStyleColor();
+
+
+        Btn_Pos_Y += 110.0f;
+        ImGui::SetCursorPos({ 10.0f, Btn_Pos_Y });
+        ImGui::PushStyleColor(ImGuiCol_Button, Var::ColorNumber == 4 ? ImVec4(1.0f, 0.5f, 0.3f, 1.0f) : ImVec4(0.35f, 0.00f, 1.00f, 0.50f));
+        if (ImGui::Button("Slide", ImVec2(200, 90))) {
+            Var::ColorNumber = 4;
+        }
+        ImGui::PopStyleColor();
+
+
+        Btn_Pos_Y += 110.0f;
+        ImGui::SetCursorPos({ 10.0f, Btn_Pos_Y });
+        ImGui::PushStyleColor(ImGuiCol_Button, Var::ColorNumber == 5 ? ImVec4(1.0f, 0.5f, 0.3f, 1.0f) : ImVec4(0.35f, 0.00f, 1.00f, 0.50f));
+        if (ImGui::Button("Plot", ImVec2(200, 90))) {
+            Var::ColorNumber = 5;
+        }
+        ImGui::PopStyleColor();
+
+
+        Btn_Pos_Y += 110.0f;
+        ImGui::SetCursorPos({ 10.0f, Btn_Pos_Y });
+        ImGui::PushStyleColor(ImGuiCol_Button, Var::ColorNumber == 6 ? ImVec4(1.0f, 0.5f, 0.3f, 1.0f) : ImVec4(0.35f, 0.00f, 1.00f, 0.50f));
+        if (ImGui::Button("Execl", ImVec2(200, 90))) {
+            Var::ColorNumber = 6;
+        }
+        ImGui::PopStyleColor();
+
+        ImGui::EndTable();
+    }
+    ImGui::EndChild();
+    ImGui::PopStyleVar();
+
+
+    ImGui::SetCursorPos({ 250.0f, 55.0f });
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+    ImGui::BeginChild("Content", ImVec2(830, 650), true, window_flags);
+    if (ImGui::BeginTable("split_1", 1, ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings))
+    {
+        ImGui::TableNextColumn();
+
+        if (Var::ColorNumber == 1) {
+            if (ReadMode == 0 && ImGui::BeginMenu("驱动")) {
+                if (ImGui::MenuItem("普通")){
+                    ReadMode=1;
+                }
+                if (ImGui::MenuItem("QX10.6")){
+                    ReadMode=2;
+                }
+                ImGui::EndMenu();
+            }
+
+
+            if (BigWhitePid==0 && ReadMode >0 && ImGui::BeginMenu("进程")) {
+                for (const ProcessInfo& process : processes) {
+                    std::string jc = "PID: " + process.pid + " | Name: " + process.name;
+                    if (ImGui::MenuItem(jc.c_str())) {
+                        BigWhitePid = std::stoi(process.pid);//这里给BigWhite_pid赋值 是为了BigWhiteRead里面需要用
+                        if (ReadMode==2){
+                            BigWhiteinit();
+                        }
+                        //Gname->75e17530d0   Offset->1c34a0d0
+                        LibBase = GetLibBase(BigWhitePid);
+                        printf("Pid：%d\nLibBase：%lx\n",BigWhitePid,LibBase);
+                        //ProcessName=process.name;//将进程名保存为全局变量
+                        //ResetOffsets();//重新选择进程时 重置偏移结构体变量
+                        //addr.libbase = GetLibBase(BigWhite_pid);
+                        //GameBase=addr.libbase;
+                        //printf("Pid：%d\nlibBase：%lx\nGname：%lx\nGobject：%lx\n",BigWhite_pid,addr.libbase,addr.GNames,addr.Gobject);
+                        cout << "Init Is OK！"<<endl;
+                        //cshzt = true;
+                    }
+                }
+                ImGui::EndMenu();
+            }
+
+            if (BigWhitePid>0&&ImGui::BeginMenu("窗口"))
+            {
+                ImGui::MenuItem("ImguiDemo", NULL, &show_demo_window);
+                ImGui::Separator();
+                ImGui::MenuItem("初始化数据", NULL, &show_finddata_window);
+                ImGui::MenuItem("UE4Dumper", NULL, &show_Dump_window);
+                ImGui::MenuItem("指针扫描", NULL, &show_pointerTool_window);
+
+                /*
+                ImGui::MenuItem("DebugDumper", NULL, &ShowDebugDumper);
+                ImGui::MenuItem("矩阵数据", NULL, &ShowDebugMatrix);*/
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("退出"))
+            {
+                main_thread_flag = false;
+                ImGui::EndMenu();
+            }
+        }
+        else if (Var::ColorNumber == 2) {
+            for (int i = 0; i < 7; i++)
+            {
+                if (i > 0)
+                    ImGui::SameLine();
+                ImGui::PushID(i);
+                ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(i / 7.0f, 0.6f, 0.6f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(i / 7.0f, 0.7f, 0.7f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(i / 7.0f, 0.8f, 0.8f));
+                ImGui::Button("Click");
+                ImGui::PopStyleColor(3);
+                ImGui::PopID();
+            }
+
+            ImGui::NewLine();
+
+            ImVec2 sz = ImVec2(-FLT_MIN, 0.0f);
+            ImGui::Button("Long Button 1", sz);
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_ForTooltip))
+                ImGui::SetTooltip("I am Long Button 1");
+
+            ImGui::Button("Long Button 2", sz);
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNone))
+                ImGui::SetTooltip("I am Long Button 2");
+
+            ImGui::Button("Long Button 3", sz);
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort | ImGuiHoveredFlags_NoSharedDelay))
+                ImGui::SetTooltip("I am Long Button 3", ImGui::GetStyle().HoverDelayShort);
+
+            ImGui::Button("Long Button 4", sz);
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_NoSharedDelay))
+                ImGui::SetTooltip("I am Long Button 4)", ImGui::GetStyle().HoverDelayNormal);
+
+            ImGui::Button("Long Button 5", sz);
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_Stationary))
+                ImGui::SetTooltip("I am Long Button 5");
+
+
+            ImGui::NewLine();
+            for (int i = 0; i < 5; i++) {
+                ImGui::Button("MainButton");
+                ImGui::SameLine();
+            }
+            ImGui::NewLine();
+            if (ImGui::Button("Button")) {
+                Var::count += 1;
+            }
+            for (int i = 0; i < Var::count; i++) {
+                ImGui::Button("New Button");
+                // ImGui::SameLine();
+            }
+
+        }
+        else if (Var::ColorNumber == 3) {
+            static bool checkOne = false;
+            static bool checkTwo = true;
+            static bool checkThree = false;
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    if (i == 0) {
+                        ImGui::Checkbox("CheckBox", &checkOne);
+                    }
+                    else if (i == 1) {
+                        ImGui::Checkbox("CheckBox1", &checkTwo);
+                    }
+                    else {
+                        ImGui::Checkbox("CheckBox2", &checkThree);
+                    }
+                    ImGui::SameLine();
+
+                }
+                ImGui::NewLine();
+            }
+            static bool checkMain = false;
+            ImGui::Checkbox("MainCheckBox", &checkMain);
+        }
+        else if (Var::ColorNumber == 4) {
+            const float spacing = 4;
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(spacing, spacing));
+
+            static int int_value = 0;
+            ImGui::VSliderInt("##int", ImVec2(18, 160), &int_value, 0, 5);
+            ImGui::SameLine();
+
+            static float values[7] = { 0.0f, 0.60f, 0.35f, 0.9f, 0.70f, 0.20f, 0.0f };
+            ImGui::PushID("set1");
+            for (int i = 0; i < 7; i++)
+            {
+                if (i > 0) ImGui::SameLine();
+                ImGui::PushID(i);
+                ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(i / 7.0f, 0.5f, 0.5f));
+                ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(i / 7.0f, 0.6f, 0.5f));
+                ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(i / 7.0f, 0.7f, 0.5f));
+                ImGui::PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(i / 7.0f, 0.9f, 0.9f));
+                ImGui::VSliderFloat("##v", ImVec2(18, 160), &values[i], 0.0f, 1.0f, "");
+                if (ImGui::IsItemActive() || ImGui::IsItemHovered())
+                    ImGui::SetTooltip("%.3f", values[i]);
+                ImGui::PopStyleColor(4);
+                ImGui::PopID();
+            }
+            ImGui::PopID();
+
+            ImGui::SameLine();
+            ImGui::PushID("set2");
+            static float values2[4] = { 0.20f, 0.80f, 0.40f, 0.25f };
+            const int rows = 3;
+            const ImVec2 small_slider_size(18, (float)(int)((160.0f - (rows - 1) * spacing) / rows));
+            for (int nx = 0; nx < 4; nx++)
+            {
+                if (nx > 0) ImGui::SameLine();
+                ImGui::BeginGroup();
+                for (int ny = 0; ny < rows; ny++)
+                {
+                    ImGui::PushID(nx * rows + ny);
+                    ImGui::VSliderFloat("##v", small_slider_size, &values2[nx], 0.0f, 1.0f, "");
+                    if (ImGui::IsItemActive() || ImGui::IsItemHovered())
+                        ImGui::SetTooltip("%.3f", values2[nx]);
+                    ImGui::PopID();
+                }
+                ImGui::EndGroup();
+            }
+            ImGui::PopID();
+
+            ImGui::SameLine();
+            ImGui::PushID("set3");
+            for (int i = 0; i < 4; i++)
+            {
+                if (i > 0) ImGui::SameLine();
+                ImGui::PushID(i);
+                ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 40);
+                ImGui::VSliderFloat("##v", ImVec2(40, 160), &values[i], 0.0f, 1.0f, "%.2f\nsec");
+                ImGui::PopStyleVar();
+                ImGui::PopID();
+            }
+            ImGui::PopID();
+            ImGui::PopStyleVar();
+        }
+        else if (Var::ColorNumber == 5) {
+            {
+                static bool animate = true;
+                ImGui::Checkbox("Animate", &animate);
+
+                static float arr[] = { 0.6f, 0.1f, 1.0f, 0.5f, 0.92f, 0.1f, 0.2f };
+                ImGui::PlotLines("Frame Times", arr, IM_ARRAYSIZE(arr));
+                ImGui::PlotHistogram("Histogram", arr, IM_ARRAYSIZE(arr), 0, NULL, 0.0f, 1.0f, ImVec2(0, 80.0f));
+
+                static float values[90] = {};
+                static int values_offset = 0;
+                static double refresh_time = 0.0;
+                if (!animate || refresh_time == 0.0)
+                    refresh_time = ImGui::GetTime();
+                while (refresh_time < ImGui::GetTime())
+                {
+                    static float phase = 0.0f;
+                    values[values_offset] = cosf(phase);
+                    values_offset = (values_offset + 1) % IM_ARRAYSIZE(values);
+                    phase += 0.10f * values_offset;
+                    refresh_time += 1.0f / 60.0f;
+                }
+
+                {
+                    float average = 0.0f;
+                    for (int n = 0; n < IM_ARRAYSIZE(values); n++)
+                        average += values[n];
+                    average /= (float)IM_ARRAYSIZE(values);
+                    char overlay[32];
+                    sprintf(overlay, "avg %f", average);
+                    ImGui::PlotLines("Lines", values, IM_ARRAYSIZE(values), values_offset, overlay, -1.0f, 1.0f, ImVec2(0, 80.0f));
+                }
+
+                struct Funcs
+                {
+                    static float Sin(void*, int i) { return sinf(i * 0.1f); }
+                    static float Saw(void*, int i) { return (i & 1) ? 1.0f : -1.0f; }
+                };
+                static int func_type = 0, display_count = 70;
+                ImGui::SeparatorText("Functions");
+                ImGui::SetNextItemWidth(ImGui::GetFontSize() * 8);
+                ImGui::Combo("func", &func_type, "Sin\0Saw\0");
+                ImGui::SameLine();
+                ImGui::SliderInt("Sample count", &display_count, 1, 400);
+                float (*func)(void*, int) = (func_type == 0) ? Funcs::Sin : Funcs::Saw;
+                ImGui::PlotLines("Lines", func, NULL, display_count, 0, NULL, -1.0f, 1.0f, ImVec2(0, 80));
+                ImGui::PlotHistogram("Histogram", func, NULL, display_count, 0, NULL, -1.0f, 1.0f, ImVec2(0, 80));
+                ImGui::Separator();
+
+                static float progress = 0.0f, progress_dir = 1.0f;
+                if (animate)
+                {
+                    progress += progress_dir * 0.4f * ImGui::GetIO().DeltaTime;
+                    if (progress >= +1.1f) { progress = +1.1f; progress_dir *= -1.0f; }
+                    if (progress <= -0.1f) { progress = -0.1f; progress_dir *= -1.0f; }
+                }
+
+                ImGui::ProgressBar(progress, ImVec2(0.0f, 0.0f));
+                ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+                ImGui::Text("Progress Bar");
+
+                float progress_saturated = IM_CLAMP(progress, 0.0f, 1.0f);
+                char buf[32];
+                sprintf(buf, "%d/%d", (int)(progress_saturated * 1753), 1753);
+                ImGui::ProgressBar(progress, ImVec2(0.f, 0.f), buf);
+            }
+        }
+        else if (Var::ColorNumber == 6) {
+            static ImGuiTableFlags flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoSavedSettings;
+
+            for (int n = 0; n < 3; n++)
+            {
+                char buf[32];
+                sprintf(buf, "Synced Table %d", n);
+                bool open = ImGui::CollapsingHeader(buf, ImGuiTreeNodeFlags_DefaultOpen);
+                if (open && ImGui::BeginTable("Table", 3, flags, ImVec2(0.0f, ImGui::GetTextLineHeightWithSpacing() * 5)))
+                {
+                    ImGui::TableSetupColumn("One");
+                    ImGui::TableSetupColumn("Two");
+                    ImGui::TableSetupColumn("Three");
+                    ImGui::TableHeadersRow();
+                    const int cell_count = (n == 1) ? 27 : 9;
+                    for (int cell = 0; cell < cell_count; cell++)
+                    {
+                        ImGui::TableNextColumn();
+                        ImGui::Text("this cell %d", cell);
+                    }
+                    ImGui::EndTable();
+                }
+            }
+        }
+
+
+        ImGui::EndTable();
+    }
+    ImGui::EndChild();
+    ImGui::PopStyleVar();
+
+    ImGui::NewLine();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+
+    //ImGui::TextColored(ImVec4(0.5f, 0.0f, 1.0f, 1.0f), "Developer:Troice   QQ:2133351499.");
+    ImGui::SameLine();
+    ImGui::GetBackgroundDrawList()->AddLine({ 0, 0 }, { 123, 456 }, ImColor(0, 255, 0, 255), { 1.5 });
+
+    g_window = ImGui::GetCurrentWindow();
+    ImGui::End();
+
+    if (show_another_window) { // 3. Show another simple window.
+        ImGui::Begin("另一个窗口", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+        ImGui::Text("另一个窗口的 爱坤!");
+#if defined(USE_OPENGL)
+        ImGui::Image((ImTextureID)op_img.textureId, ImVec2(170, 170));
+#else
+        ImGui::Image((ImTextureID)vk_img.DS, ImVec2(170, 170));
+#endif
+        if (ImGui::Button("关闭这个坤口")) {
+            show_another_window = false;
+        }
+
+        ImGui::End();
+
+    }
+
+    if (show_demo_window) {
+        ImGui::ShowDemoWindow(&show_demo_window);
+    }
+    if (show_finddata_window) {
+        ShowFindDataWindow();
+    }
+    if (show_Dump_window) {
+        ShowDumpWindow();
+    }
+    if (show_pointerTool_window) {
+        ShowpointerToolWindow();
+    }
+
+
+}
+
+
+void Layout_tick_UI2() {
     static bool show_demo_window = false;
     static bool show_another_window = false;
     static bool show_finddata_window = false;
@@ -193,35 +614,6 @@ void Layout_tick_UI() {
     }
 
 
-    if (show_another_window) { // 3. Show another simple window.
-        ImGui::Begin("另一个窗口", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-        ImGui::Text("另一个窗口的 爱坤!");
-#if defined(USE_OPENGL)
-        ImGui::Image((ImTextureID)op_img.textureId, ImVec2(170, 170));
-#else
-        ImGui::Image((ImTextureID)vk_img.DS, ImVec2(170, 170));
-#endif
-        if (ImGui::Button("关闭这个坤口")) {
-            show_another_window = false;
-        }
-        ImGui::End();
-    }
-
-    if (show_demo_window) {
-        ImGui::ShowDemoWindow(&show_demo_window);
-    }
-    if (show_finddata_window) {
-        ShowFindDataWindow();
-    }
-    if (show_Dump_window) {
-        ShowDumpWindow();
-    }
-    if (show_pointerTool_window) {
-        ShowpointerToolWindow();
-    }
-
-
-    g_window = ImGui::GetCurrentWindow();
 }
 void InputInit(){
     uint64_t Address = 0;

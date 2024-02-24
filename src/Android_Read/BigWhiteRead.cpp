@@ -134,6 +134,8 @@ bool BigWhite_vm_writev(unsigned long address, void *buffer, size_t size)
 {
     return BigWhite_pvm(reinterpret_cast < void *>(address), buffer, size, true);
 }
+
+
 // 获取F类内存
 float BigWhite_GetFloat(unsigned long addr)
 {
@@ -161,6 +163,7 @@ unsigned long BigWhite_GetPtr64(unsigned long addr)
 // 写入D类内存
 void BigWhite_WriteDword(unsigned long addr, int data)
 {
+    printf("%lx---%d",addr,data);
     BigWhite_vm_writev(addr, &data, 4);
 }
 void BigWhite_WriteFloat(unsigned long addr, float data)
@@ -399,23 +402,23 @@ float GetFloat(uintptr_t addr){
 
 
 
-int WriteDword(long int addr, int value)
+bool WriteDword(uintptr_t addr, int value)
 {
     if (ReadMode == 1){
         BigWhite_WriteDword(addr,value);
     } else if(ReadMode==2){
         driver->write(addr, &value, 4);
     }
-    return 0;
+    return true;
 }
 
-int WriteFloat(long int addr, float value)
+bool WriteFloat(uintptr_t addr, float value)
 {
     if (ReadMode == 1){
         BigWhite_WriteFloat(addr,value);
     } else if(ReadMode==2){
         driver->write(addr, &value, 4);
     }
-    return 0;
+    return true;
 }
 

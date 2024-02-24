@@ -49,9 +49,9 @@ int GetDword(uintptr_t addr);
 //读浮点型
 float GetFloat(uintptr_t addr);
 //写四字节整形
-int WriteDword(uintptr_t addr, int value);
+bool WriteDword(uintptr_t addr, int value);
 //写浮点型
-float WriteFloat(uintptr_t addr, float value);
+bool WriteFloat(uintptr_t addr, float value);
 
 void BigWhiteinit();
 // 进程读写内存
