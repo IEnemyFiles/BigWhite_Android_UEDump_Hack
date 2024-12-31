@@ -3,10 +3,10 @@ name: Android Build
 on:
   push:
     branches:
-      - master
+      - master  # Changed from 'main' to 'master'
   pull_request:
     branches:
-      - master
+      - master  # Changed from 'main' to 'master'
 
 jobs:
   build:
@@ -20,6 +20,7 @@ jobs:
       uses: actions/setup-java@v3
       with:
         java-version: '11'
+        distribution: 'adoptopenjdk'  # Specify the JDK distribution
 
     - name: Set up Android SDK
       run: |
